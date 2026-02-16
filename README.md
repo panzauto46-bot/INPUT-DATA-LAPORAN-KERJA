@@ -107,10 +107,10 @@ Rencana pengembangan aplikasi ini kedepan untuk menjadi sistem manajemen kerja y
 - [x] **Role Management**: Admin vs Staff (Admin bisa melihat rekap semua staff).
 
 ### Fase 3: Kolaborasi & Laporan Lanjutan (Q3 2026) 📅
-- [ ] **Komentar & Feedback**: Atasan bisa memberi komentar pada laporan kerja.
-- [ ] **Ekspor PDF**: Generate laporan PDF rapi dengan kop surat perusahaan.
-- [ ] **Notifikasi Email**: Recap otomatis harian/mingguan via email.
-- [ ] **Tim & Departemen**: Pengelompokan user berdasarkan divisi.
+- [x] **Komentar & Feedback**: Atasan bisa memberi komentar pada laporan kerja.
+- [x] **Ekspor PDF**: Generate laporan PDF rapi dengan kop surat perusahaan.
+- [x] **Notifikasi Email**: Recap otomatis harian/mingguan via email.
+- [x] **Tim & Departemen**: Pengelompokan user berdasarkan divisi.
 
 ### Fase 4: Integrasi & Mobile (Q4 2026) 🔮
 - [ ] **Integrasi Kalender**: Sinkronisasi dengan Google Calendar/Outlook.
