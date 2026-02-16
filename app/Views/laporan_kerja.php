@@ -277,7 +277,7 @@
 
     <!-- Footer -->
     <footer class="max-w-7xl mx-auto px-4 py-8 text-center text-xs text-gray-400">
-        <p>Sistem Laporan Kerja Harian &copy; 2026</p>
+        <p>Sistem Laporan Kerja Harian &copy; 2026 — Dibuat dengan ❤️ oleh Rifqy Malikh Hanapi</p>
         <p class="mt-1">Dideploy dengan PHP CodeIgniter 4 di Vercel</p>
     </footer>
 

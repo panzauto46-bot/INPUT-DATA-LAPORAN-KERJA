@@ -145,6 +145,6 @@ Proyek ini dilisensikan di bawah **MIT License**. Silakan gunakan, modifikasi, d
 ---
 
 <div align="center">
-  <p>Dibuat dengan ❤️ oleh Tim Pengembang Panz Auto</p>
+  <p>Dibuat dengan ❤️ oleh Rifqy Malikh Hanapi</p>
   <p>2026 © Hak Cipta Dilindungi</p>
 </div>
