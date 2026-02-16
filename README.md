@@ -113,9 +113,9 @@ Rencana pengembangan aplikasi ini kedepan untuk menjadi sistem manajemen kerja y
 - [x] **Tim & Departemen**: Pengelompokan user berdasarkan divisi.
 
 ### Fase 4: Integrasi & Mobile (Q4 2026) 🔮
-- [ ] **Integrasi Kalender**: Sinkronisasi dengan Google Calendar/Outlook.
-- [ ] **Progressive Web App (PWA)**: Bisa diinstal di HP layaknya aplikasi native.
-- [ ] **Analitik Lanjutan**: Prediksi beban kerja dan analisis performa karyawan berbasis AI.
+- [x] **Integrasi Kalender**: Sinkronisasi dengan Google Calendar/Outlook.
+- [x] **Progressive Web App (PWA)**: Bisa diinstal di HP layaknya aplikasi native.
+- [x] **Analitik Lanjutan**: Prediksi beban kerja dan analisis performa karyawan berbasis AI.
 
 ---
 

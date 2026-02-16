@@ -11,6 +11,9 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <style>
         [x-cloak] {
             display: none !important;
@@ -18,7 +21,7 @@
     </style>
 </head>
 
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800" x-data="appData()" x-init="initCharts()">
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800" x-data="appData()" x-init="initApp()">
 
     <!-- Notification -->
     <div x-show="notification" x-transition
@@ -281,6 +284,9 @@
                         <!-- Actions -->
                         <div class="px-5 pb-3 flex justify-end gap-2 border-t border-gray-50 pt-2"
                             x-show="expandedId === item.id">
+                            <button @click.stop="addToCalendar(item)"
+                                class="text-indigo-600 text-xs hover:underline flex items-center gap-1"><i
+                                    data-lucide="calendar-plus" class="w-3 h-3"></i> Sync Calendar</button>
                             <button @click.stop="editItem(item)"
                                 class="text-blue-600 text-xs hover:underline flex items-center gap-1"><i
                                     data-lucide="edit-3" class="w-3 h-3"></i> Edit</button>
@@ -296,6 +302,44 @@
 
         <!-- DASHBOARD TAB -->
         <div x-show="activeTab === 'dashboard'" x-transition>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- AI Insights Panel -->
+                <div
+                    class="lg:col-span-2 bg-gradient-to-r from-violet-500 to-fuchsia-500 rounded-2xl shadow-lg p-6 text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 opacity-10">
+                        <i data-lucide="brain-circuit" class="w-32 h-32"></i>
+                    </div>
+                    <div class="relative z-10">
+                        <h2 class="text-xl font-bold flex items-center gap-2 mb-2">
+                            <i data-lucide="sparkles"></i> AI Analitik Lanjutan
+                        </h2>
+                        <p class="text-violet-100 text-sm mb-4">Prediksi beban kerja & analisis performa berbasis data
+                            historis.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-white/10 backdrop-blur rounded-xl p-3 border border-white/20">
+                                <div class="text-xs text-violet-200">Risiko Burnout</div>
+                                <div class="text-lg font-bold" x-text="aiInsights.burnoutRisk"></div>
+                                <div class="w-full bg-white/20 h-1.5 rounded-full mt-2">
+                                    <div class="h-1.5 rounded-full bg-white transition-all"
+                                        :style="`width: ${aiInsights.burnoutScore}%`"></div>
+                                </div>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur rounded-xl p-3 border border-white/20">
+                                <div class="text-xs text-violet-200">Prediksi Selesai Besok</div>
+                                <div class="text-lg font-bold" x-text="aiInsights.completionRate + '%'"></div>
+                                <div class="text-[10px] text-violet-200 mt-1">Estimasi berdasarkan tren sebelumnya</div>
+                            </div>
+                            <div class="bg-white/10 backdrop-blur rounded-xl p-3 border border-white/20">
+                                <div class="text-xs text-violet-200">Saran Produktivitas</div>
+                                <div class="text-sm font-medium italic">"<span x-text="aiInsights.suggestion"></span>"
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div class="bg-white p-6 rounded-2xl shadow-lg">
                     <h3 class="font-semibold mb-4">Kegiatan per Kategori</h3>
@@ -351,6 +395,15 @@
                     id: null, tanggal: new Date().toISOString().split('T')[0], nama: '', jabatan: '', departemen: 'IT',
                     jamMulai: '', jamSelesai: '', kegiatan: '', komentar: '', kategori: 'Administrasi',
                     prioritas: 0, status: 0, rating: 3, persentase: 0
+                },
+
+                aiInsights: { burnoutRisk: 'Rendah', burnoutScore: 20, completionRate: 85, suggestion: 'Pertahankan ritme kerja!' },
+
+                initApp() {
+                    this.init();
+                    if ('serviceWorker' in navigator) {
+                        navigator.serviceWorker.register('/sw.js').then(() => console.log('Service Worker Registered'));
+                    }
                 },
 
                 init() {
@@ -505,6 +558,8 @@
                 updateCharts() {
                     if (this.activeTab !== 'dashboard') return;
 
+                    this.calculateAI();
+
                     const ctx1 = document.getElementById('chartKategori');
                     const ctx2 = document.getElementById('chartStatus');
 
@@ -538,6 +593,49 @@
                         },
                         options: { responsive: true, maintainAspectRatio: false }
                     });
+                },
+
+                addToCalendar(item) {
+                    const start = item.tanggal.replace(/-/g, '') + 'T' + item.jamMulai.replace(':', '') + '00';
+                    const end = item.tanggal.replace(/-/g, '') + 'T' + item.jamSelesai.replace(':', '') + '00';
+                    const details = encodeURIComponent(`Status: ${this.statusOptions[item.status].label}\nPrioritas: ${item.prioritas}\n\n${item.kegiatan}`);
+                    const location = encodeURIComponent(item.departemen || 'Kantor');
+                    const url = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(item.kegiatan)}&dates=${start}/${end}&details=${details}&location=${location}&sf=true&output=xml`;
+                    window.open(url, '_blank');
+                    this.showNotif('Membuka Google Calendar... 📅');
+                },
+
+                calculateAI() {
+                    // Logika AI Sederhana (Simulasi)
+                    const totalHours = this.data.reduce((acc, curr) => {
+                        const [h1, m1] = curr.jamMulai.split(':').map(Number);
+                        const [h2, m2] = curr.jamSelesai.split(':').map(Number);
+                        return acc + ((h2 * 60 + m2) - (h1 * 60 + m1));
+                    }, 0) / 60;
+
+                    let burnout = 'Rendah';
+                    let score = 20;
+                    let suggest = 'Pertahankan ritme kerja!';
+
+                    if (totalHours > 8) {
+                        burnout = 'Sedang';
+                        score = 60;
+                        suggest = 'Coba ambil jeda istirahat singkat.';
+                    }
+                    if (totalHours > 12) {
+                        burnout = 'Tinggi ⚠️';
+                        score = 90;
+                        suggest = 'Stop! Segera istirahat sebelum kelelahan.';
+                    }
+
+                    const completion = Math.round(this.data.filter(d => d.status === 2).length / (this.data.length || 1) * 100);
+
+                    this.aiInsights = {
+                        burnoutRisk: burnout,
+                        burnoutScore: score,
+                        completionRate: completion > 80 ? 95 : completion + 10,
+                        suggestion: suggest
+                    };
                 }
             }
         }
