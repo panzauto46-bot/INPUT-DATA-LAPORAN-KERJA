@@ -9,6 +9,8 @@
     <script src="//unpkg.com/alpinejs" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         [x-cloak] {
             display: none !important;
@@ -99,7 +101,15 @@
                 <div class="flex gap-2">
                     <button @click="exportCSV"
                         class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
-                        <i data-lucide="download" class="w-4 h-4"></i> Export
+                        <i data-lucide="download" class="w-4 h-4"></i> Export CSV
+                    </button>
+                    <button @click="exportPDF"
+                        class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
+                        <i data-lucide="file-text" class="w-4 h-4"></i> Export PDF
+                    </button>
+                    <button @click="sendEmail"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
+                        <i data-lucide="mail" class="w-4 h-4"></i> Email Recap
                     </button>
                     <button @click="toggleForm()"
                         class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 shadow-sm transition-colors">
@@ -135,6 +145,17 @@
                             class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400">
                     </div>
                     <div>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1">Departemen</label>
+                        <select x-model="formData.departemen"
+                            class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400">
+                            <option value="IT">IT</option>
+                            <option value="HRD">HRD</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Operasional">Operasional</option>
+                            <option value="Keuangan">Keuangan</option>
+                        </select>
+                    </div>
+                    <div>
                         <label class="block text-xs font-semibold text-gray-600 mb-1">Jam Mulai *</label>
                         <input type="time" x-model="formData.jamMulai"
                             class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400">
@@ -153,110 +174,124 @@
                             </template>
                         </select>
                     </div>
-                    <div class="md:col-span-3">
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Kegiatan *</label>
-                        <textarea x-model="formData.kegiatan" rows="2"
-                            class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
-                            placeholder="Deskripsi kegiatan..."></textarea>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
-                        <select x-model="formData.status"
-                            class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400">
-                            <template x-for="(s, index) in statusOptions" :key="index">
-                                <option :value="index" x-text="s.label"></option>
-                            </template>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Rating</label>
-                        <div class="flex gap-1">
-                            <template x-for="i in 5">
-                                <button @click="formData.rating = i"
-                                    class="text-xl focus:outline-none transition-transform hover:scale-110"
-                                    :class="i <= formData.rating ? 'text-yellow-400' : 'text-gray-300'">★</button>
-                            </template>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Progress (<span
-                                x-text="formData.persentase + '%'"></span>)</label>
-                        <input type="range" x-model="formData.persentase" min="0" max="100"
-                            class="w-full accent-indigo-600">
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Kegiatan *</label>
+                    <textarea x-model="formData.kegiatan" rows="2"
+                        class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+                        placeholder="Deskripsi kegiatan..."></textarea>
+                </div>
+                <div class="md:col-span-3">
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Komentar / Feedback (Atasan)</label>
+                    <textarea x-model="formData.komentar" rows="1"
+                        class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400"
+                        placeholder="Catatan dari atasan..."></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+                    <select x-model="formData.status"
+                        class="w-full border p-2 rounded-lg text-sm focus:ring-2 focus:ring-indigo-400">
+                        <template x-for="(s, index) in statusOptions" :key="index">
+                            <option :value="index" x-text="s.label"></option>
+                        </template>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Rating</label>
+                    <div class="flex gap-1">
+                        <template x-for="i in 5">
+                            <button @click="formData.rating = i"
+                                class="text-xl focus:outline-none transition-transform hover:scale-110"
+                                :class="i <= formData.rating ? 'text-yellow-400' : 'text-gray-300'">★</button>
+                        </template>
                     </div>
                 </div>
-                <div class="px-6 pb-5 flex gap-2">
-                    <button @click="saveData()"
-                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium shadow-md transition-colors">Simpan</button>
-                    <button @click="showForm = false"
-                        class="text-gray-600 hover:bg-gray-100 px-6 py-2 rounded-lg transition-colors">Batal</button>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600 mb-1">Progress (<span
+                            x-text="formData.persentase + '%'"></span>)</label>
+                    <input type="range" x-model="formData.persentase" min="0" max="100"
+                        class="w-full accent-indigo-600">
                 </div>
             </div>
+            <div class="px-6 pb-5 flex gap-2">
+                <button @click="saveData()"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-medium shadow-md transition-colors">Simpan</button>
+                <button @click="showForm = false"
+                    class="text-gray-600 hover:bg-gray-100 px-6 py-2 rounded-lg transition-colors">Batal</button>
+            </div>
+        </div>
 
-            <!-- List -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
-                    <h3 class="font-semibold text-gray-800">📋 Data Kerja Harian (<span
-                            x-text="filteredData.length"></span>)</h3>
+        <!-- List -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+            <div class="px-5 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 class="font-semibold text-gray-800">📋 Data Kerja Harian (<span
+                        x-text="filteredData.length"></span>)</h3>
+            </div>
+
+            <template x-if="filteredData.length === 0">
+                <div class="text-center py-16 text-gray-400">
+                    <i data-lucide="file-text" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
+                    <p>Tidak ada data ditemukan.</p>
                 </div>
+            </template>
 
-                <template x-if="filteredData.length === 0">
-                    <div class="text-center py-16 text-gray-400">
-                        <i data-lucide="file-text" class="w-12 h-12 mx-auto mb-3 opacity-50"></i>
-                        <p>Tidak ada data ditemukan.</p>
-                    </div>
-                </template>
-
-                <div class="divide-y divide-gray-50">
-                    <template x-for="item in filteredData" :key="item.id">
-                        <div class="hover:bg-indigo-50/30 transition-colors">
-                            <div class="px-5 py-3 cursor-pointer" @click="toggleExpand(item.id)">
-                                <div class="flex items-start gap-4">
-                                    <div class="mt-1 w-3 h-3 rounded-full" :class="getPriorityColor(item.prioritas)">
+            <div class="divide-y divide-gray-50">
+                <template x-for="item in filteredData" :key="item.id">
+                    <div class="hover:bg-indigo-50/30 transition-colors">
+                        <div class="px-5 py-3 cursor-pointer" @click="toggleExpand(item.id)">
+                            <div class="flex items-start gap-4">
+                                <div class="mt-1 w-3 h-3 rounded-full" :class="getPriorityColor(item.prioritas)">
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex flex-wrap gap-2 items-center mb-1">
+                                        <span class="font-semibold text-gray-900" x-text="item.nama"></span>
+                                        <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full"
+                                            x-text="item.jabatan"></span>
+                                        <span
+                                            class="bg-blue-50 text-blue-600 text-xs px-2 py-0.5 rounded-full border border-blue-100"
+                                            x-text="item.departemen || '-'"></span>
+                                        <span class="text-xs px-2 py-0.5 rounded-full"
+                                            :class="statusOptions[item.status].color"
+                                            x-text="statusOptions[item.status].label"></span>
                                     </div>
-                                    <div class="flex-1 min-w-0">
-                                        <div class="flex flex-wrap gap-2 items-center mb-1">
-                                            <span class="font-semibold text-gray-900" x-text="item.nama"></span>
-                                            <span class="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full"
-                                                x-text="item.jabatan"></span>
-                                            <span class="text-xs px-2 py-0.5 rounded-full"
-                                                :class="statusOptions[item.status].color"
-                                                x-text="statusOptions[item.status].label"></span>
-                                        </div>
-                                        <p class="text-sm text-gray-800 line-clamp-1" x-text="item.kegiatan"></p>
-                                        <div class="flex gap-4 mt-2 text-xs text-gray-500">
-                                            <span class="flex items-center gap-1"><i data-lucide="calendar"
-                                                    class="w-3 h-3"></i> <span x-text="item.tanggal"></span></span>
-                                            <span class="flex items-center gap-1"><i data-lucide="clock"
-                                                    class="w-3 h-3"></i> <span
-                                                    x-text="item.jamMulai + ' - ' + item.jamSelesai"></span></span>
-                                        </div>
+                                    <p class="text-sm text-gray-800 line-clamp-1" x-text="item.kegiatan"></p>
+                                    <div class="flex gap-4 mt-2 text-xs text-gray-500">
+                                        <span class="flex items-center gap-1"><i data-lucide="calendar"
+                                                class="w-3 h-3"></i> <span x-text="item.tanggal"></span></span>
+                                        <span class="flex items-center gap-1"><i data-lucide="clock"
+                                                class="w-3 h-3"></i> <span
+                                                x-text="item.jamMulai + ' - ' + item.jamSelesai"></span></span>
                                     </div>
-                                    <div class="flex flex-col items-end gap-2">
-                                        <div class="flex text-yellow-400 text-xs">
-                                            <template x-for="i in 5">
-                                                <span x-text="i <= item.rating ? '★' : '☆'" class="text-sm"></span>
-                                            </template>
-                                        </div>
-                                        <div class="text-xs font-bold text-gray-500" x-text="item.persentase + '%'">
-                                        </div>
+                                    <div x-show="item.komentar"
+                                        class="mt-2 text-xs bg-yellow-50 text-yellow-800 p-2 rounded border border-yellow-100">
+                                        <strong>💬 Feedback:</strong> <span x-text="item.komentar"></span>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-2">
+                                    <div class="flex text-yellow-400 text-xs">
+                                        <template x-for="i in 5">
+                                            <span x-text="i <= item.rating ? '★' : '☆'" class="text-sm"></span>
+                                        </template>
+                                    </div>
+                                    <div class="text-xs font-bold text-gray-500" x-text="item.persentase + '%'">
                                     </div>
                                 </div>
                             </div>
-                            <!-- Actions -->
-                            <div class="px-5 pb-3 flex justify-end gap-2 border-t border-gray-50 pt-2"
-                                x-show="expandedId === item.id">
-                                <button @click.stop="editItem(item)"
-                                    class="text-blue-600 text-xs hover:underline flex items-center gap-1"><i
-                                        data-lucide="edit-3" class="w-3 h-3"></i> Edit</button>
-                                <button @click.stop="deleteItem(item.id)"
-                                    class="text-red-600 text-xs hover:underline flex items-center gap-1"><i
-                                        data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button>
-                            </div>
                         </div>
-                    </template>
-                </div>
+                        <!-- Actions -->
+                        <div class="px-5 pb-3 flex justify-end gap-2 border-t border-gray-50 pt-2"
+                            x-show="expandedId === item.id">
+                            <button @click.stop="editItem(item)"
+                                class="text-blue-600 text-xs hover:underline flex items-center gap-1"><i
+                                    data-lucide="edit-3" class="w-3 h-3"></i> Edit</button>
+                            <button @click.stop="deleteItem(item.id)"
+                                class="text-red-600 text-xs hover:underline flex items-center gap-1"><i
+                                    data-lucide="trash-2" class="w-3 h-3"></i> Hapus</button>
+                        </div>
+                    </div>
+                </template>
             </div>
+        </div>
         </div>
 
         <!-- DASHBOARD TAB -->
@@ -283,9 +318,9 @@
 
     <script>
         const initialData = [
-            { id: 1, tanggal: "2026-02-16", nama: "Ahmad Fauzi", jabatan: "Staff IT", jamMulai: "08:00", jamSelesai: "10:00", kegiatan: "Maintenance server", kategori: "Maintenance", prioritas: 1, status: 2, rating: 4, persentase: 100 },
-            { id: 2, tanggal: "2026-02-16", nama: "Siti Rahma", jabatan: "HRD", jamMulai: "09:00", jamSelesai: "11:30", kegiatan: "Rekap absen", kategori: "Administrasi", prioritas: 0, status: 2, rating: 5, persentase: 100 },
-            { id: 3, tanggal: "2026-02-15", nama: "Budi Santoso", jabatan: "Marketing", jamMulai: "10:00", jamSelesai: "15:00", kegiatan: "Mitings Klien", kategori: "Meeting", prioritas: 2, status: 1, rating: 3, persentase: 50 },
+            { id: 1, tanggal: "2026-02-16", nama: "Ahmad Fauzi", jabatan: "Staff IT", departemen: "IT", jamMulai: "08:00", jamSelesai: "10:00", kegiatan: "Maintenance server", komentar: "Kerja bagus, server lancar.", kategori: "Maintenance", prioritas: 1, status: 2, rating: 4, persentase: 100 },
+            { id: 2, tanggal: "2026-02-16", nama: "Siti Rahma", jabatan: "HRD", departemen: "HRD", jamMulai: "09:00", jamSelesai: "11:30", kegiatan: "Rekap absen", komentar: "", kategori: "Administrasi", prioritas: 0, status: 2, rating: 5, persentase: 100 },
+            { id: 3, tanggal: "2026-02-15", nama: "Budi Santoso", jabatan: "Marketing", departemen: "Marketing", jamMulai: "10:00", jamSelesai: "15:00", kegiatan: "Mitings Klien", komentar: "Tolong follow up lagi lusa.", kategori: "Meeting", prioritas: 2, status: 1, rating: 3, persentase: 50 },
         ];
 
         function appData() {
@@ -313,8 +348,8 @@
                 ],
 
                 formData: {
-                    id: null, tanggal: new Date().toISOString().split('T')[0], nama: '', jabatan: '',
-                    jamMulai: '', jamSelesai: '', kegiatan: '', kategori: 'Administrasi',
+                    id: null, tanggal: new Date().toISOString().split('T')[0], nama: '', jabatan: '', departemen: 'IT',
+                    jamMulai: '', jamSelesai: '', kegiatan: '', komentar: '', kategori: 'Administrasi',
                     prioritas: 0, status: 0, rating: 3, persentase: 0
                 },
 
@@ -350,8 +385,8 @@
                 resetForm() {
                     this.editId = null;
                     this.formData = {
-                        id: null, tanggal: new Date().toISOString().split('T')[0], nama: '', jabatan: '',
-                        jamMulai: '', jamSelesai: '', kegiatan: '', kategori: 'Administrasi',
+                        id: null, tanggal: new Date().toISOString().split('T')[0], nama: '', jabatan: '', departemen: 'IT',
+                        jamMulai: '', jamSelesai: '', kegiatan: '', komentar: '', kategori: 'Administrasi',
                         prioritas: 0, status: 0, rating: 3, persentase: 0
                     };
                 },
@@ -415,6 +450,48 @@
                     a.href = url;
                     a.download = "Laporan_Kerja.csv";
                     a.click();
+                },
+
+                exportPDF() {
+                    if (!window.jspdf) return;
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+
+                    // Header (Kop Surat Simulasi)
+                    doc.setFontSize(18);
+                    doc.text("PT. MAJU MUNDUR SEJAHTERA", 105, 15, { align: "center" });
+                    doc.setFontSize(10);
+                    doc.text("Jl. Teknologi No. 123, Jakarta Selatan, Indonesia", 105, 22, { align: "center" });
+                    doc.line(15, 25, 195, 25);
+
+                    doc.setFontSize(14);
+                    doc.text("LAPORAN KERJA HARIAN", 105, 35, { align: "center" });
+
+                    const head = [['Tanggal', 'Nama', 'Dept', 'Kegiatan', 'Status', 'Feedback']];
+                    const body = this.filteredData.map(d => [
+                        d.tanggal, d.nama, d.departemen || '-', d.kegiatan, this.statusOptions[d.status].label, d.komentar || '-'
+                    ]);
+
+                    doc.autoTable({
+                        head: head,
+                        body: body,
+                        startY: 40,
+                        styles: { fontSize: 8 },
+                        headStyles: { fillColor: [79, 70, 229] }
+                    });
+
+                    doc.save("Laporan_Kerja.pdf");
+                    this.showNotif('PDF berhasil diunduh! 📄');
+                },
+
+                sendEmail() {
+                    // Simulasi pengiriman email
+                    const recipient = "atasan@perusahaan.com";
+                    const subject = `Laporan Kerja Harian - ${new Date().toLocaleDateString('id-ID')}`;
+                    const body = `Berikut terlampir laporan kerja tim hari ini.\n\nTotal Kegiatan: ${this.data.length}\nSelesai: ${this.statsList[1].value}\n\nTerima kasih.`;
+
+                    window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                    this.showNotif('Membuka aplikasi email... 📧');
                 },
 
                 // Charts
