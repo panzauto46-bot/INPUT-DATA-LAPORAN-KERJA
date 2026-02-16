@@ -101,9 +101,9 @@ Rencana pengembangan aplikasi ini kedepan untuk menjadi sistem manajemen kerja y
 - [x] Dashboard sederhana.
 - [x] Konfigurasi Deployment Vercel.
 
-### Fase 2: Persistensi & Autentikasi (Q2 2026) 🚧
-- [ ] **Integarasi Database**: Migrasi dari LocalStorage ke database cloud (Supabase/MySQL/PostgreSQL) agar data tersimpan permanen di server.
-- [ ] **Sistem Login Multi-User**: Menambahkan fitur registrasi dan login untuk membedakan data antar pengguna.
+### Fase 2: Persistensi & Autentikasi (Sedang Berjalan) 🚧
+- [ ] **Integarasi Database**: Migrasi dari LocalStorage ke database cloud (Supabase/MySQL/PostgreSQL) agar data tersimpan permanen di server. _(Struktur Migrasi Sudah Siap)_
+- [ ] **Sistem Login Multi-User**: Menambahkan fitur registrasi dan login untuk membedakan data antar pengguna. _(Tabel User Sudah Siap)_
 - [ ] **Role Management**: Admin vs Staff (Admin bisa melihat rekap semua staff).
 
 ### Fase 3: Kolaborasi & Laporan Lanjutan (Q3 2026) 📅
